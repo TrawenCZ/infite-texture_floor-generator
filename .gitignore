@@ -127,3 +127,16 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# FloorGenerator generated folders
+.config/
+Input/
+Output/
+Done/
+Vstup/
+Vystup/
+Hotovo/
+
+# IDE folders
+.idea/
+.vscode/

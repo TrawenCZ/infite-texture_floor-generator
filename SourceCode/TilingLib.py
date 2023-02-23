@@ -16,7 +16,6 @@ CUSTOM_COLOR: Tuple[int, int, int] = (-1, -1, -1)
 def workspace_init(input_file: str, border_color: Tuple[int, int, int], tile_count: int,
                    border_thickness: int, workspace_adder: int) -> \
         Tuple[Image, bool, int, int, Tuple[int, int, int]]:
-
     image_is_square: bool = False
     with Image.open(PATHS["input_path"] + input_file) as image:
         image_width, image_height = image.size
@@ -63,25 +62,16 @@ def average_color(image: Image) -> Tuple[int, int, int]:
 
 def loader(tile_count: int, border_color, border_thickness: int, composer: Callable) -> None:
     files: List[str] = []
-    image_size: Tuple[int, int]
-    should_ignore_different_sizes = False
+    fst_image_size: int
 
     input_folder_content: List[str] = os.listdir(PATHS["input_path"])
     if len(input_folder_content) == 0:
         print(f"'{PATHS['input_path']}'" + MESSAGES["empty_input_folder"])
         return
-    with Image.open(PATHS["input_path"] + input_folder_content[0]) as image:
-        image_size = image.size
 
     for file in input_folder_content:
         try:
             tester = Image.open(PATHS["input_path"] + file)
-            if not should_ignore_different_sizes and tester.size != image_size:
-                if input(MESSAGES["image_differs"]).lower() not in POSITIVE_STATEMENTS:
-                    tester.close()
-                    return
-                else:
-                    should_ignore_different_sizes = True
             tester.close()
             files.append(file)
         except:
@@ -103,13 +93,15 @@ def loader(tile_count: int, border_color, border_thickness: int, composer: Calla
 
 
 def define_border_thickness() -> int:
+    image_width_millimetres: int = 1
+    border_thickness_millimetres: int = 0
     while True:
         try:
-            image_width_millimetres: int = int(input(MESSAGES["tile_width"]))
+            image_width_millimetres = int(input(MESSAGES["tile_width"]))
             if image_width_millimetres < 1:
                 print(MESSAGES["mm_above_1"])
                 continue
-            border_thickness_millimetres: int = int(input(MESSAGES["border_size"]))
+            border_thickness_millimetres = int(input(MESSAGES["border_size"]))
             if border_thickness_millimetres < 0:
                 print(MESSAGES["mm_above_0"])
                 continue
@@ -126,7 +118,7 @@ def define_border_thickness() -> int:
     try:
         with Image.open(PATHS["input_path"] + files[0]) as image:
             pixels_per_millimeter = image.width / image_width_millimetres
-            return border_thickness_millimetres * round(pixels_per_millimeter)
+            return round(border_thickness_millimetres * pixels_per_millimeter)
     except:
         print(f"'{files[0]}'" + MESSAGES["not_valid_image"])
         return -1
@@ -192,19 +184,49 @@ def define_tile_count() -> int:
             continue
 
 
-def rotate_if_needed() -> None:
+def rotate_and_resize_if_needed() -> bool:
+    first_image_params_set: bool = False
+    should_ignore_different_ratios: bool = False
+    first_image_ratio: float = 0
+    first_image_size: Tuple[int, int] = (0, 0)
+    ratio_tolerance_const: float = 0.1
+
     for file in os.listdir(PATHS["input_path"]):
         try:
             image: Image = Image.open(PATHS["input_path"] + file)
             if image.width < image.height:
                 image = image.transpose(Image.ROTATE_90)
                 image.save(PATHS["input_path"] + "rotated_" + file)
+                os.remove(PATHS["input_path"] + file)
+                file = "rotated_" + file
+
+            if not first_image_params_set:
+                first_image_ratio = image.size[0] / image.size[1]
+                first_image_size = image.size
+                first_image_params_set = True
+                image.close()
+                continue
+
+            curr_size_ratio: float = image.size[0] / image.size[1]
+            if not should_ignore_different_ratios \
+                    and (curr_size_ratio > first_image_ratio + ratio_tolerance_const
+                         or curr_size_ratio < first_image_ratio - ratio_tolerance_const):
+                if input(MESSAGES["image_differs"]).lower() not in POSITIVE_STATEMENTS:
+                    image.close()
+                    return False
+                else:
+                    should_ignore_different_ratios = True
+
+            if image.size != first_image_size:
+                image = image.resize(first_image_size)
+                image.save(PATHS["input_path"] + "resized_" + file)
                 image.close()
                 os.remove(PATHS["input_path"] + file)
             else:
                 image.close()
         except:
             continue
+    return True
 
 
 def save_config(dirs: Dict[str, str], language: str) -> None:
@@ -317,7 +339,10 @@ def load_config() -> None:
 def initializer(composer: Callable):
     load_config()
     print(MESSAGES["welcome_msg"] + "\n")
-    rotate_if_needed()
+    if not rotate_and_resize_if_needed():
+        print(MESSAGES["goodbye"])
+        sleep(5)
+        return
 
     border_color: Union[Tuple[int, int, int], str] = define_border_color()
     tile_count: int = define_tile_count()
@@ -328,4 +353,5 @@ def initializer(composer: Callable):
         return
 
     loader(tile_count, border_color, border_thickness, composer)
+    print(MESSAGES["goodbye"])
     sleep(5)

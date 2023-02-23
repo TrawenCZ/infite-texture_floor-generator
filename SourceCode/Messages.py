@@ -30,7 +30,8 @@ EN_MSGS: Dict[str, str] = {
     "try_non_zero": "Please try number bigger than zero.",
     "wrong_config_format": "Incorrect config file format. Format should look like this:\n",
     "empty_config_value": "Empty value for one of the config file's attributes.",
-    "welcome_msg": "Welcome to the tiling program made by Adam Slíva."
+    "welcome_msg": "Welcome to the tiling program made by Adam Slíva.",
+    "goodbye": "\nI'll be looking forward to see you again!"
 }
 
 CZ_MSGS: Dict[str, str] = {
@@ -62,5 +63,6 @@ CZ_MSGS: Dict[str, str] = {
     "try_non_zero": "Prosím zadejte číslo větší než nula.",
     "wrong_config_format": "Nekorektní formát konfiguračního souboru. Formát by měl vypadat takto:\n",
     "empty_config_value": "Prázdná hodnota pro jeden z atributů konfiguračního souboru.",
-    "welcome_msg": "Vítejte v programu na dlaždičkování od Adama Slívy."
+    "welcome_msg": "Vítejte v programu na dlaždičkování od Adama Slívy.",
+    "goodbye": "\nBudu se těšit zase příště!"
 }
